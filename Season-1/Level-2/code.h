@@ -75,13 +75,16 @@ bool update_setting(int user_id, const char *index, const char *value) {
 
     char *endptr;
     long i, v;
+    // check whether index is also numeric
     i = strtol(index, &endptr, 10);
+    // endptr return the parsing location -> return \0 is legitimate or x is nol illegitimate
     if (*endptr)
         return false;
 
     v = strtol(value, &endptr, 10);
-    if (*endptr || i >= SETTINGS_COUNT)
+    if (*endptr ||  i<0 || i >= SETTINGS_COUNT)
         return false;
+    // if i is negative number, will exceeed the boundary of setting array
     accounts[user_id]->setting[i] = v;
     return true;
 }
