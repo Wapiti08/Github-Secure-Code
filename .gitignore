@@ -317,3 +317,4 @@ Module.symvers
 Mkfile.old
 dkms.conf.vite/
 .vite/
+.venv
