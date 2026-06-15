@@ -89,15 +89,18 @@ class DB_CRUD_ops(object):
             cur = db_con.cursor()
 
             res = "[METHOD EXECUTED] get_stock_info\n"
-            query = "SELECT * FROM stocks WHERE symbol = '{0}'".format(stock_symbol)
-            res += "[QUERY] " + query + "\n"
+            display_query = "SELECT * FROM stocks WHERE symbol = '{0}'".format(stock_symbol)
+            # change to parameterized query
+            query = "SELECT * FROM stocks WHERE symbol = ?"
+            params = (stock_symbol, )
+            res += "[QUERY] " + display_query + "\n"
 
             # a block list (aka restricted characters) that should not exist in user-supplied input
             restricted_chars = ";%&^!#-"
             # checks if input contains characters from the block list
-            has_restricted_char = any([char in query for char in restricted_chars])
+            has_restricted_char = any([char in display_query for char in restricted_chars])
             # checks if input contains a wrong number of single quotes against SQL injection
-            correct_number_of_single_quotes = query.count("'") == 2
+            correct_number_of_single_quotes = display_query.count("'") == 2
 
             # performs the checks for good cyber security and safe software against SQL injection
             if has_restricted_char or not correct_number_of_single_quotes:
@@ -106,8 +109,9 @@ class DB_CRUD_ops(object):
                 # res += "[SANITIZED_QUERY]" + sanitized_query + "\n"
                 res += "CONFIRM THAT THE ABOVE QUERY IS NOT MALICIOUS TO EXECUTE"
             else:
-                cur.execute(query)
-
+                cur.execute(query, params)
+                # cur.execute(query)
+                # change to query with params
                 query_outcome = cur.fetchall()
                 for result in query_outcome:
                     res += "[RESULT] " + str(result)
@@ -133,13 +137,25 @@ class DB_CRUD_ops(object):
             cur = db_con.cursor()
 
             res = "[METHOD EXECUTED] get_stock_price\n"
-            query = "SELECT price FROM stocks WHERE symbol = '" + stock_symbol + "'"
-            res += "[QUERY] " + query + "\n"
+
+            # filter out ; first
+            exec_symbol = stock_symbol.split("'")[0]
+
+            display_query = "SELECT price FROM stocks WHERE symbol = '" + exec_symbol + "'"
+            query = "SELECT price FROM stocks WHERE symbol = ?"
+
+            # display_query = "SELECT price FROM stocks WHERE symbol = '{}'".format(stock_symbol)
+
+            params = (exec_symbol, )
+
+            res += "[QUERY] " + display_query + "\n"
+
             if ';' in query:
                 res += "[SCRIPT EXECUTION]\n"
                 cur.executescript(query)
             else:
-                cur.execute(query)
+                # cur.execute(query)
+                cur.execute(query ,params)
                 query_outcome = cur.fetchall()
                 for result in query_outcome:
                     res += "[RESULT] " + str(result) + "\n"
@@ -167,10 +183,15 @@ class DB_CRUD_ops(object):
 
             res = "[METHOD EXECUTED] update_stock_price\n"
             # UPDATE stocks SET price = 310.0 WHERE symbol = 'MSFT'
-            query = "UPDATE stocks SET price = '%d' WHERE symbol = '%s'" % (price, stock_symbol)
-            res += "[QUERY] " + query + "\n"
+            query = "UPDATE stocks SET price = ? WHERE symbol = ?"
+            params = (price, stock_symbol, )
+            display_query = "UPDATE stocks SET price = '%d' WHERE symbol = '%s'" % (price, stock_symbol)
+            
+            res += "[QUERY] " + display_query + "\n"
 
-            cur.execute(query)
+            # cur.execute(query)
+            # change to paramaterized query
+            cur.execute(query, params)
             db_con.commit()
             query_outcome = cur.fetchall()
             for result in query_outcome:
